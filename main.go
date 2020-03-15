@@ -135,6 +135,19 @@ func getServices(clientset *kubernetes.Clientset) {
 	}
 }
 
+func getNamespaces(clientset *kubernetes.Clientset) {
+	fmt.Println("")
+	log.Println("All Namespaces")
+	fmt.Println("")
+	namespaces, err := clientset.CoreV1().Namespaces().List(metav1.ListOptions{})
+	if err != nil {
+		log.Fatalln("failed to get namespace:", err)
+	}
+	for i, namespace := range namespaces.Items {
+		fmt.Printf("[%d] %s\n", i, namespace.GetName())
+	}
+}
+
 func startArgs(clientset *kubernetes.Clientset) {
 	if len(os.Args) < 2 {
 		usage()
@@ -144,6 +157,7 @@ func startArgs(clientset *kubernetes.Clientset) {
 	cfmapPtr := flag.Bool("configmap", false, "Config Maps")
 	ingressPtr := flag.Bool("ingress", false, "Ingresses and Details")
 	servicesPtr := flag.Bool("services", false, "Services and Details")
+	namespacesPtr := flag.Bool("namespaces", false, "namespaces")
 	flag.Parse()
 
 	if *podsPtr == true {
@@ -158,6 +172,9 @@ func startArgs(clientset *kubernetes.Clientset) {
 	} else if *servicesPtr == true {
 		getServices(clientset)
 		os.Exit(0)
+	} else if *namespacesPtr == true {
+		getNamespaces(clientset)
+		os.Exit(0)
 	} else {
 		fmt.Println("Try Again..")
 		os.Exit(0)
@@ -169,10 +186,13 @@ func main() {
 
 	var ns string
 	flag.StringVar(&ns, "namespace", "", "namespace")
-
+	kubeconfig := os.Getenv("kubeconfig")
+	if kubeconfig == "" {
+		fmt.Println("no env var found, falling back to config file")
+		kubeconfig = filepath.Join(os.Getenv("HOME"), ".kube", "config")
+		log.Println("Using kubeconfig file: ", kubeconfig)
+	}
 	// Bootstrap k8s configuration from local 	Kubernetes config file
-	kubeconfig := filepath.Join(os.Getenv("HOME"), ".kube", "config")
-	log.Println("Using kubeconfig file: ", kubeconfig)
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		log.Fatal(err)
