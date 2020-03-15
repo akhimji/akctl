@@ -1,0 +1,189 @@
+package main
+
+import (
+	"flag"
+	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+)
+
+// This program lists the pods in a cluster equivalent to
+//
+// kubectl get pods
+//
+
+func usage() {
+	ProjectName := "AKClient"
+	Version := "v0.1"
+	fmt.Printf("🏔️ %s %s\n", ProjectName, Version)
+	fmt.Println("Author: Aly Khimji")
+	fmt.Print("\nUsage: ak [-pods|-configmap|-ingress]\n")
+	fmt.Println("Options:")
+	fmt.Println("    --config\tConfiguration path")
+	fmt.Println("    --help\tHelp info")
+}
+
+func getPods(clientset *kubernetes.Clientset) {
+	fmt.Println("")
+	log.Println("All Pods")
+	pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+	if err != nil {
+		log.Fatalln("failed to get pods:", err)
+	}
+
+	// print pods
+	for i, pod := range pods.Items {
+		fmt.Printf("[%d] %s\n", i, pod.GetName())
+	}
+	os.Exit(0)
+}
+
+func getConfigMaps(clientset *kubernetes.Clientset) {
+	fmt.Println("")
+	log.Println("All ConfigMaps")
+	cfmaps, err := clientset.CoreV1().ConfigMaps("").List(metav1.ListOptions{})
+	if err != nil {
+		log.Fatalln("failed to get ConfigMap:", err)
+	}
+	// print pods
+	for i, cfmaps := range cfmaps.Items {
+		fmt.Printf("[%d] %s\n", i, cfmaps.GetName())
+	}
+}
+
+func getIngress(clientset *kubernetes.Clientset) {
+	fmt.Println("")
+	log.Println("All Ingress")
+	list, err := clientset.ExtensionsV1beta1().Ingresses("").List(metav1.ListOptions{}) // "" is all namespaces
+	if err != nil {
+		log.Fatalln("failed to get Ingress:", err)
+	}
+	for i, ingress := range list.Items {
+		fmt.Printf("[%d] %s\n", i, ingress.GetName())
+	}
+
+	fmt.Println("")
+	log.Println("Breakout Ingress")
+	fmt.Println("")
+	ingress, err := clientset.ExtensionsV1beta1().Ingresses("").List(metav1.ListOptions{}) // "" is all namespaces
+	for i, v := range ingress.Items {
+		//fmt.Printf("%#v\n", v)
+		if v.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntVal == 80 {
+			log.Println("Ingress:", i)
+			//fmt.Println(v.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntVal)
+			//fmt.Println(v.Spec)
+			//fmt.Println(v.Spec.Rules[0])
+			//fmt.Println(v.Spec.Rules[0].HTTP)
+			fmt.Println("Ingress ServiceName:", v.Spec.Rules[0].HTTP.Paths[0].Backend.ServiceName)
+			//fmt.Println(v.Spec.Rules[0].HTTP.Paths[0].Backend.ServiceName)
+			fmt.Println("Ingress ServicePort:", v.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntValue())
+			//fmt.Println(v.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntValue())
+			fmt.Println("Ingress Host:", v.Spec.Rules[0].Host)
+			//fmt.Println(v.Spec.Rules[0].Host)
+			fmt.Println("")
+		}
+	}
+}
+
+// func showIngress(clientset *kubernetes.Clientset) {
+// 	list, _ := clientset.ExtensionsV1beta1().Ingresses("").List(metav1.ListOptions{}) // "" is all namespaces
+// 	for _, ingress := range list.Items {
+// 		for _, rule := range ingress.Spec.Rules {
+// 			for _, path := range rule.HTTP.Paths {
+// 				service, _ := clientset.CoreV1().Services(ingress.GetObjectMeta().GetNamespace()).Get(path.Backend.ServiceName, metav1.GetOptions{})
+// 				host := rule.Host
+// 				fmt.Println(host)
+// 				path := path.Path
+// 				fmt.Println(path)
+// 				backend := ingress.spec
+// 				fmt.Println(backend)
+// 				destination := service.Spec.ClusterIP
+// 				fmt.Println(destination)
+// 			}
+// 		}
+// 	}
+// }
+
+func getServices(clientset *kubernetes.Clientset) {
+	fmt.Println("")
+	log.Println("All Services")
+	fmt.Println("")
+	services, err := clientset.CoreV1().Services("").List(metav1.ListOptions{})
+	if err != nil {
+		log.Fatalln("failed to get Services:", err)
+	}
+	for i, services := range services.Items {
+		fmt.Printf("[%d] %s\n", i, services.GetName())
+	}
+
+	fmt.Println("")
+	log.Println("Breakout Services")
+	fmt.Println("")
+	for _, v := range services.Items {
+		fmt.Println("")
+		fmt.Println("ServiceName:", v.GetName())
+		fmt.Println("Namespace:", v.GetNamespace())
+		fmt.Println("ClusterIP:", v.Spec.ClusterIP)
+		fmt.Println("Port:", v.Spec.Ports[0].Port)
+		fmt.Println("Target Ports:", v.Spec.Ports[0].TargetPort)
+		fmt.Println("Proctol:", v.Spec.Ports[0].Protocol)
+	}
+}
+
+func startArgs(clientset *kubernetes.Clientset) {
+	if len(os.Args) < 2 {
+		usage()
+		os.Exit(0)
+	}
+	podsPtr := flag.Bool("pods", false, "Pods")
+	cfmapPtr := flag.Bool("configmap", false, "Config Maps")
+	ingressPtr := flag.Bool("ingress", false, "Ingresses and Details")
+	servicesPtr := flag.Bool("services", false, "Services and Details")
+	flag.Parse()
+
+	if *podsPtr == true {
+		getPods(clientset)
+		os.Exit(0)
+	} else if *cfmapPtr == true {
+		getConfigMaps(clientset)
+		os.Exit(0)
+	} else if *ingressPtr == true {
+		getIngress(clientset)
+		os.Exit(0)
+	} else if *servicesPtr == true {
+		getServices(clientset)
+		os.Exit(0)
+	} else {
+		fmt.Println("Try Again..")
+		os.Exit(0)
+	}
+
+}
+
+func main() {
+
+	var ns string
+	flag.StringVar(&ns, "namespace", "", "namespace")
+
+	// Bootstrap k8s configuration from local 	Kubernetes config file
+	kubeconfig := filepath.Join(os.Getenv("HOME"), ".kube", "config")
+	log.Println("Using kubeconfig file: ", kubeconfig)
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Create an rest client not targeting specific API version
+	clientset, err := kubernetes.NewForConfig(config)
+	//fmt.Println(reflect.TypeOf(clientset))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	startArgs(clientset)
+}
