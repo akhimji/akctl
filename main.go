@@ -9,12 +9,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-
-	corev1 "k8s.io/api/core/v1"
 )
 
 // This program lists the pods in a cluster equivalent to
@@ -241,6 +240,36 @@ func getPodsForSvc(svc *corev1.Service, namespace string, clientset *kubernetes.
 	return pods, err
 }
 
+func getPodinService(clientset *kubernetes.Clientset) {
+	name := "kube-dns"
+	services, err := clientset.CoreV1().Services("").List(metav1.ListOptions{})
+	if err != nil {
+		fmt.Println("Get service from kubernetes cluster error: %v", err)
+		return
+	}
+
+	for _, service := range services.Items {
+		//fmt.Println("namespace", name, "serviceName:", service.GetName(), "serviceKind:", service.Kind, "serviceLabels:", service.GetLabels(), service.Spec.Ports, "serviceSelector:", service.Spec.Selector)
+
+		//labels.Parser
+		//set := labels.Set(service.Spec.Selector)
+		//fmt.Println(set)
+		labelSelector := metav1.LabelSelector{MatchLabels: map[string]string{"k8s-app": name}}
+		//metav1.ListOptions{LabelSelector: set.AsSelector()}
+		listOptions := metav1.ListOptions{
+			LabelSelector: labels.Set(labelSelector.MatchLabels).String(),
+		}
+		if pods, err := clientset.CoreV1().Pods("").List(listOptions); err != nil {
+			fmt.Printf("List Pods of service[%s] error:%v", service.GetName(), err)
+		} else {
+			for _, v := range pods.Items {
+				//fmt.Println(v.GetName(), v.Spec.NodeName, v.Spec.Containers)
+				fmt.Println(v.GetName())
+			}
+		}
+	}
+}
+
 func main() {
 
 	var ns string
@@ -265,17 +294,19 @@ func main() {
 	}
 
 	//startArgs(clientset)
-	namespace := "kube-system"
-	svc, err := getServiceForDeployment("kube-dns", namespace, clientset)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(2)
-	}
+	//namespace := "kube-system"
+	//deploy := "kube-dns"
+	//svc, err := getServiceForDeployment(deploy, namespace, clientset)
+	//if err != nil {
+	//	fmt.Fprintf(os.Stderr, "error: %v\n", err)
+	//	os.Exit(2)
+	//}
 
-	pods, err := getPodsForSvc(svc, namespace, clientset)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(2)
-	}
+	//pods, err := getPodsForSvc(svc, namespace, clientset)
+	//if err != nil {
+	//	fmt.Fprintf(os.Stderr, "error: %v\n", err)
+	//	os.Exit(2)
+	//}
+	getPodinService(clientset)
 
 }
