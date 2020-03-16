@@ -1,15 +1,20 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+
+	corev1 "k8s.io/api/core/v1"
 )
 
 // This program lists the pods in a cluster equivalent to
@@ -126,6 +131,7 @@ func getServices(clientset *kubernetes.Clientset) {
 	fmt.Println("")
 	for _, v := range services.Items {
 		fmt.Println("")
+		fmt.Println(v)
 		fmt.Println("ServiceName:", v.GetName())
 		fmt.Println("Namespace:", v.GetNamespace())
 		fmt.Println("ClusterIP:", v.Spec.ClusterIP)
@@ -210,6 +216,31 @@ func startArgs(clientset *kubernetes.Clientset) {
 
 }
 
+func getServiceForDeployment(deployment string, namespace string, clientset *kubernetes.Clientset) (*corev1.Service, error) {
+	listOptions := metav1.ListOptions{}
+	svcs, err := clientset.CoreV1().Services(namespace).List(listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, svc := range svcs.Items {
+		if strings.Contains(svc.Name, deployment) {
+			fmt.Fprintf(os.Stdout, "service name: %v\n", svc.Name)
+			return &svc, nil
+		}
+	}
+	return nil, errors.New("cannot find service for deployment")
+}
+
+func getPodsForSvc(svc *corev1.Service, namespace string, clientset *kubernetes.Clientset) (*corev1.PodList, error) {
+	set := labels.Set(svc.Spec.Selector)
+	listOptions := metav1.ListOptions{LabelSelector: set.AsSelector().String()}
+	pods, err := clientset.CoreV1().Pods(namespace).List(listOptions)
+	for _, pod := range pods.Items {
+		fmt.Fprintf(os.Stdout, "pod name: %v\n", pod.Name)
+	}
+	return pods, err
+}
+
 func main() {
 
 	var ns string
@@ -233,5 +264,18 @@ func main() {
 		log.Fatal(err)
 	}
 
-	startArgs(clientset)
+	//startArgs(clientset)
+	namespace := "kube-system"
+	svc, err := getServiceForDeployment("kube-dns", namespace, clientset)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(2)
+	}
+
+	pods, err := getPodsForSvc(svc, namespace, clientset)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(2)
+	}
+
 }
