@@ -146,6 +146,30 @@ func getNamespaces(clientset *kubernetes.Clientset) {
 	for i, namespace := range namespaces.Items {
 		fmt.Printf("[%d] %s\n", i, namespace.GetName())
 	}
+	//fmt.Println(namespaces)
+}
+
+func getTest(clientset *kubernetes.Clientset) {
+	fmt.Println("")
+	log.Println("All Namespaces")
+	fmt.Println("")
+	pods, err := clientset.CoreV1().Pods("kube-system").List(metav1.ListOptions{})
+	if err != nil {
+		log.Fatalln("failed to get pods from namespace:", err)
+	}
+	for _, p := range pods.Items {
+		fmt.Println(p.GetName())
+	}
+
+	list, err := clientset.CoreV1().Pods("kube-system").List(metav1.ListOptions{})
+	for _, l := range list.Items {
+		fmt.Println("Request CPU ==> ", l.Spec.Containers[0].Resources.Requests.Cpu(), " Request Memory ==> ", l.Spec.Containers[0].Resources.Requests.Memory())
+		fmt.Println("Limit CPU ==> ", l.Spec.Containers[0].Resources.Limits.Cpu(), " Limit Memory ==> ", l.Spec.Containers[0].Resources.Limits.Memory())
+	}
+	nodeList, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{})
+	for _, nodeList := range nodeList.Items {
+		fmt.Println(nodeList.GetName())
+	}
 }
 
 func startArgs(clientset *kubernetes.Clientset) {
@@ -158,6 +182,7 @@ func startArgs(clientset *kubernetes.Clientset) {
 	ingressPtr := flag.Bool("ingress", false, "Ingresses and Details")
 	servicesPtr := flag.Bool("services", false, "Services and Details")
 	namespacesPtr := flag.Bool("namespaces", false, "namespaces")
+	testPtr := flag.Bool("test", false, "test")
 	flag.Parse()
 
 	if *podsPtr == true {
@@ -174,6 +199,9 @@ func startArgs(clientset *kubernetes.Clientset) {
 		os.Exit(0)
 	} else if *namespacesPtr == true {
 		getNamespaces(clientset)
+		os.Exit(0)
+	} else if *testPtr == true {
+		getTest(clientset)
 		os.Exit(0)
 	} else {
 		fmt.Println("Try Again..")
