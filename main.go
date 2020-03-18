@@ -1,15 +1,12 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
@@ -177,6 +174,34 @@ func getTest(clientset *kubernetes.Clientset) {
 	}
 }
 
+func getPodinService(clientset *kubernetes.Clientset, name string) {
+	// Passthrough Clientset and Service name
+	listOptions := metav1.ListOptions{}
+	//listOptions
+	//get all services
+	svcs, err := clientset.CoreV1().Services("").List(listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// loop through service obejects
+	for _, svc := range svcs.Items {
+		// match name to requested name
+		if svc.Name == name {
+			fmt.Fprintf(os.Stdout, "service name: %v\n", svc.Name)
+			set := labels.Set(svc.Spec.Selector)
+			// get labels from svc.Spec.Selector and build listOptions with this label
+			listOptions := metav1.ListOptions{LabelSelector: set.AsSelector().String()}
+			// fetch through alll pods that have  this label
+			pods, _ := clientset.CoreV1().Pods("").List(listOptions)
+			// loop through pods Items and display
+			for _, pod := range pods.Items {
+				fmt.Fprintf(os.Stdout, "backing pod name: %v\n", pod.Name)
+			}
+		}
+	}
+
+}
+
 func startArgs(clientset *kubernetes.Clientset) {
 	if len(os.Args) < 2 {
 		usage()
@@ -187,6 +212,7 @@ func startArgs(clientset *kubernetes.Clientset) {
 	ingressPtr := flag.Bool("ingress", false, "Ingresses and Details")
 	servicesPtr := flag.Bool("services", false, "Services and Details")
 	namespacesPtr := flag.Bool("namespaces", false, "namespaces")
+	podsinservicePtr := flag.Bool("podsinservice", false, "podsinservice")
 	testPtr := flag.Bool("test", false, "test")
 	flag.Parse()
 
@@ -208,66 +234,15 @@ func startArgs(clientset *kubernetes.Clientset) {
 	} else if *testPtr == true {
 		getTest(clientset)
 		os.Exit(0)
+	} else if *podsinservicePtr == true {
+		svcname := os.Args[2]
+		getPodinService(clientset, svcname)
+		os.Exit(0)
 	} else {
 		fmt.Println("Try Again..")
 		os.Exit(0)
 	}
 
-}
-
-func getServiceForDeployment(deployment string, namespace string, clientset *kubernetes.Clientset) (*corev1.Service, error) {
-	listOptions := metav1.ListOptions{}
-	svcs, err := clientset.CoreV1().Services(namespace).List(listOptions)
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, svc := range svcs.Items {
-		if strings.Contains(svc.Name, deployment) {
-			fmt.Fprintf(os.Stdout, "service name: %v\n", svc.Name)
-			return &svc, nil
-		}
-	}
-	return nil, errors.New("cannot find service for deployment")
-}
-
-func getPodsForSvc(svc *corev1.Service, namespace string, clientset *kubernetes.Clientset) (*corev1.PodList, error) {
-	set := labels.Set(svc.Spec.Selector)
-	listOptions := metav1.ListOptions{LabelSelector: set.AsSelector().String()}
-	pods, err := clientset.CoreV1().Pods(namespace).List(listOptions)
-	for _, pod := range pods.Items {
-		fmt.Fprintf(os.Stdout, "pod name: %v\n", pod.Name)
-	}
-	return pods, err
-}
-
-func getPodinService(clientset *kubernetes.Clientset) {
-	name := "kube-dns"
-	services, err := clientset.CoreV1().Services("").List(metav1.ListOptions{})
-	if err != nil {
-		fmt.Println("Get service from kubernetes cluster error: %v", err)
-		return
-	}
-
-	for _, service := range services.Items {
-		//fmt.Println("namespace", name, "serviceName:", service.GetName(), "serviceKind:", service.Kind, "serviceLabels:", service.GetLabels(), service.Spec.Ports, "serviceSelector:", service.Spec.Selector)
-
-		//labels.Parser
-		//set := labels.Set(service.Spec.Selector)
-		//fmt.Println(set)
-		labelSelector := metav1.LabelSelector{MatchLabels: map[string]string{"k8s-app": name}}
-		//metav1.ListOptions{LabelSelector: set.AsSelector()}
-		listOptions := metav1.ListOptions{
-			LabelSelector: labels.Set(labelSelector.MatchLabels).String(),
-		}
-		if pods, err := clientset.CoreV1().Pods("").List(listOptions); err != nil {
-			fmt.Printf("List Pods of service[%s] error:%v", service.GetName(), err)
-		} else {
-			for _, v := range pods.Items {
-				//fmt.Println(v.GetName(), v.Spec.NodeName, v.Spec.Containers)
-				fmt.Println(v.GetName())
-			}
-		}
-	}
 }
 
 func main() {
@@ -293,20 +268,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	//startArgs(clientset)
-	//namespace := "kube-system"
-	//deploy := "kube-dns"
-	//svc, err := getServiceForDeployment(deploy, namespace, clientset)
-	//if err != nil {
-	//	fmt.Fprintf(os.Stderr, "error: %v\n", err)
-	//	os.Exit(2)
-	//}
+	startArgs(clientset)
 
-	//pods, err := getPodsForSvc(svc, namespace, clientset)
-	//if err != nil {
-	//	fmt.Fprintf(os.Stderr, "error: %v\n", err)
-	//	os.Exit(2)
-	//}
-	getPodinService(clientset)
+	//name := "istio-operator-metrics"
+	//getPodinService(clientset, name)
 
 }
