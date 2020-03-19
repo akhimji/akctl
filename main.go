@@ -188,6 +188,13 @@ func getPodinService(clientset *kubernetes.Clientset, name string) {
 		// match name to requested name
 		if svc.Name == name {
 			fmt.Fprintf(os.Stdout, "service name: %v\n", svc.Name)
+			fmt.Println("	|")
+			fmt.Println("	|")
+			fmt.Println("	--> Namespace:", svc.GetNamespace())
+			fmt.Println("	--> ClusterIP:", svc.Spec.ClusterIP)
+			fmt.Println("	--> Port:", svc.Spec.Ports[0].Port)
+			fmt.Println("	--> Target Ports:", svc.Spec.Ports[0].TargetPort)
+			fmt.Println("	--> Proctol:", svc.Spec.Ports[0].Protocol)
 			set := labels.Set(svc.Spec.Selector)
 			// get labels from svc.Spec.Selector and build listOptions with this label
 			listOptions := metav1.ListOptions{LabelSelector: set.AsSelector().String()}
@@ -195,7 +202,10 @@ func getPodinService(clientset *kubernetes.Clientset, name string) {
 			pods, _ := clientset.CoreV1().Pods("").List(listOptions)
 			// loop through pods Items and display
 			for _, pod := range pods.Items {
-				fmt.Fprintf(os.Stdout, "backing pod name: %v\n", pod.Name)
+				fmt.Println("	|")
+				fmt.Println("	|")
+				fmt.Fprintf(os.Stdout, "	--> backing pod name: %v\n", pod.Name)
+				fmt.Fprintf(os.Stdout, "	--> backing pod status: %v\n", pod.Status.Phase)
 			}
 		}
 	}
