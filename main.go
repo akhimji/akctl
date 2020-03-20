@@ -13,48 +13,38 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-// This program lists the pods in a cluster equivalent to
-//
-// kubectl get pods
-//
-
 func usage() {
-	ProjectName := "AKClient"
+	ProjectName := "akctl"
 	Version := "v0.1"
-	fmt.Printf("🏔️ %s %s\n", ProjectName, Version)
+	fmt.Printf("🏔️ ✓ %s %s\n", ProjectName, Version)
 	fmt.Println("Author: Aly Khimji")
-	fmt.Print("\nUsage: ak [-pods|-configmap|-ingress]\n")
+	fmt.Print("\nUsage: akctl [-pods|-configmap|-ingress]\n")
 	fmt.Println("Options:")
 	fmt.Println("    --config\tConfiguration path")
 	fmt.Println("    --help\tHelp info")
 }
 
-func getPods(clientset *kubernetes.Clientset) {
+func getPods(clientset *kubernetes.Clientset, namespace string) {
 	fmt.Println("")
-	log.Println("All Pods")
-	pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+	pods, err := clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{})
 	if err != nil {
 		log.Fatalln("failed to get pods:", err)
 	}
-
-	// print pods
 	for i, pod := range pods.Items {
 		fmt.Printf("[%d] %s\n", i, pod.GetName())
 	}
-	os.Exit(0)
 }
 
-func getConfigMaps(clientset *kubernetes.Clientset) {
+func getConfigMaps(clientset *kubernetes.Clientset, namespace string) {
 	fmt.Println("")
-	log.Println("All ConfigMaps")
-	cfmaps, err := clientset.CoreV1().ConfigMaps("").List(metav1.ListOptions{})
+	cfmaps, err := clientset.CoreV1().ConfigMaps(namespace).List(metav1.ListOptions{})
 	if err != nil {
 		log.Fatalln("failed to get ConfigMap:", err)
 	}
-	// print pods
-	for i, cfmaps := range cfmaps.Items {
-		fmt.Printf("[%d] %s\n", i, cfmaps.GetName())
+	for i, cfmap := range cfmaps.Items {
+		fmt.Printf("[%d] %s\n", i, cfmap.GetName())
 	}
+
 }
 
 func getIngress(clientset *kubernetes.Clientset) {
@@ -110,11 +100,11 @@ func getIngress(clientset *kubernetes.Clientset) {
 // 	}
 // }
 
-func getServices(clientset *kubernetes.Clientset) {
+func getServices(clientset *kubernetes.Clientset, namespace string) {
 	fmt.Println("")
 	log.Println("All Services")
 	fmt.Println("")
-	services, err := clientset.CoreV1().Services("").List(metav1.ListOptions{})
+	services, err := clientset.CoreV1().Services(namespace).List(metav1.ListOptions{})
 	if err != nil {
 		log.Fatalln("failed to get Services:", err)
 	}
@@ -127,7 +117,7 @@ func getServices(clientset *kubernetes.Clientset) {
 	fmt.Println("")
 	for _, v := range services.Items {
 		fmt.Println("")
-		fmt.Println(v)
+		//fmt.Println(v)
 		fmt.Println("ServiceName:", v.GetName())
 		fmt.Println("Namespace:", v.GetNamespace())
 		fmt.Println("ClusterIP:", v.Spec.ClusterIP)
@@ -172,6 +162,12 @@ func getTest(clientset *kubernetes.Clientset) {
 	for _, nodeList := range nodeList.Items {
 		fmt.Println(nodeList.GetName())
 	}
+
+	fmt.Println("------------")
+	configmaps, err := clientset.CoreV1().ConfigMaps("").List(metav1.ListOptions{})
+	for _, cm := range configmaps.Items {
+		fmt.Println(cm.GetName())
+	}
 }
 
 func getPodinService(clientset *kubernetes.Clientset, name string) {
@@ -186,10 +182,11 @@ func getPodinService(clientset *kubernetes.Clientset, name string) {
 	// loop through service obejects
 	for _, svc := range svcs.Items {
 		// match name to requested name
+
 		if svc.Name == name {
 			fmt.Fprintf(os.Stdout, "service name: %v\n", svc.Name)
 			fmt.Println("	|")
-			fmt.Println("	|")
+			//fmt.Println("	|")
 			fmt.Println("	--> Namespace:", svc.GetNamespace())
 			fmt.Println("	--> ClusterIP:", svc.Spec.ClusterIP)
 			fmt.Println("	--> Port:", svc.Spec.Ports[0].Port)
@@ -205,6 +202,7 @@ func getPodinService(clientset *kubernetes.Clientset, name string) {
 				fmt.Println("	|")
 				fmt.Println("	|")
 				fmt.Fprintf(os.Stdout, "	--> backing pod name: %v\n", pod.Name)
+				fmt.Fprintf(os.Stdout, "	--> backing pod IP: %v\n", pod.Status.PodIP)
 				fmt.Fprintf(os.Stdout, "	--> backing pod status: %v\n", pod.Status.Phase)
 			}
 		}
@@ -217,42 +215,49 @@ func startArgs(clientset *kubernetes.Clientset) {
 		usage()
 		os.Exit(0)
 	}
-	podsPtr := flag.Bool("pods", false, "Pods")
-	cfmapPtr := flag.Bool("configmap", false, "Config Maps")
+	podsPtr := flag.Bool("pods", false, "pods")
+	nsPtr := flag.String("n", "", "namespace")
+	svcPtr := flag.String("s", "", "service")
+	cfmapPtr := flag.Bool("configmaps", false, "Config Maps")
 	ingressPtr := flag.Bool("ingress", false, "Ingresses and Details")
 	servicesPtr := flag.Bool("services", false, "Services and Details")
 	namespacesPtr := flag.Bool("namespaces", false, "namespaces")
 	podsinservicePtr := flag.Bool("podsinservice", false, "podsinservice")
 	testPtr := flag.Bool("test", false, "test")
+
 	flag.Parse()
 
 	if *podsPtr == true {
-		getPods(clientset)
-		os.Exit(0)
-	} else if *cfmapPtr == true {
-		getConfigMaps(clientset)
-		os.Exit(0)
-	} else if *ingressPtr == true {
-		getIngress(clientset)
-		os.Exit(0)
-	} else if *servicesPtr == true {
-		getServices(clientset)
-		os.Exit(0)
-	} else if *namespacesPtr == true {
-		getNamespaces(clientset)
-		os.Exit(0)
-	} else if *testPtr == true {
-		getTest(clientset)
-		os.Exit(0)
-	} else if *podsinservicePtr == true {
-		svcname := os.Args[2]
-		getPodinService(clientset, svcname)
-		os.Exit(0)
-	} else {
-		fmt.Println("Try Again..")
-		os.Exit(0)
+		getPods(clientset, *nsPtr)
+		//os.Exit(0)
 	}
 
+	if *cfmapPtr == true {
+		getConfigMaps(clientset, *nsPtr)
+		os.Exit(0)
+	}
+	if *ingressPtr == true {
+		getIngress(clientset)
+		os.Exit(0)
+	}
+	if *servicesPtr == true {
+		getServices(clientset, *nsPtr)
+		os.Exit(0)
+	}
+	if *namespacesPtr == true {
+		getNamespaces(clientset)
+		os.Exit(0)
+	}
+	if *testPtr == true {
+		getTest(clientset)
+		os.Exit(0)
+	}
+	if *podsinservicePtr == true {
+		getPodinService(clientset, *svcPtr)
+		os.Exit(0)
+	}
+	fmt.Println("Try Again..")
+	os.Exit(0)
 }
 
 func main() {
@@ -263,9 +268,11 @@ func main() {
 	if kubeconfig == "" {
 		fmt.Println("no env var found, falling back to config file")
 		kubeconfig = filepath.Join(os.Getenv("HOME"), ".kube", "config")
-		log.Println("Using kubeconfig file: ", kubeconfig)
+		log.Println(" ✓ Using kubeconfig file: ", kubeconfig)
+	} else {
+		log.Println(" ✓ Using kubeconfig via OS ENV")
 	}
-	// Bootstrap k8s configuration from local 	Kubernetes config file
+	// Bootstrap k8s configuration
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		log.Fatal(err)
