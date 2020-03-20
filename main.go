@@ -64,20 +64,21 @@ func getIngress(clientset *kubernetes.Clientset) {
 	ingress, err := clientset.ExtensionsV1beta1().Ingresses("").List(metav1.ListOptions{}) // "" is all namespaces
 	for i, v := range ingress.Items {
 		//fmt.Printf("%#v\n", v)
-		if v.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntVal == 80 {
-			log.Println("Ingress:", i)
-			//fmt.Println(v.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntVal)
-			//fmt.Println(v.Spec)
-			//fmt.Println(v.Spec.Rules[0])
-			//fmt.Println(v.Spec.Rules[0].HTTP)
-			fmt.Println("Ingress ServiceName:", v.Spec.Rules[0].HTTP.Paths[0].Backend.ServiceName)
-			//fmt.Println(v.Spec.Rules[0].HTTP.Paths[0].Backend.ServiceName)
-			fmt.Println("Ingress ServicePort:", v.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntValue())
-			//fmt.Println(v.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntValue())
-			fmt.Println("Ingress Host:", v.Spec.Rules[0].Host)
-			//fmt.Println(v.Spec.Rules[0].Host)
-			fmt.Println("")
-		}
+		//if v.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntVal == 8080
+		//if v.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntVal == 8080 {
+		fmt.Println("Ingress:", i)
+		//fmt.Println(v.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntVal)
+		//fmt.Println(v.Spec)
+		//fmt.Println(v.Spec.Rules[0])
+		//fmt.Println(v.Spec.Rules[0].HTTP)
+		fmt.Println("Ingress ServiceName:", v.Spec.Rules[0].HTTP.Paths[0].Backend.ServiceName)
+		//fmt.Println(v.Spec.Rules[0].HTTP.Paths[0].Backend.ServiceName)
+		fmt.Println("Ingress ServicePort:", v.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntValue())
+		//fmt.Println(v.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntValue())
+		fmt.Println("Ingress Host:", v.Spec.Rules[0].Host)
+		//fmt.Println(v.Spec.Rules[0].Host)
+		fmt.Println("")
+		//}
 	}
 }
 
@@ -229,7 +230,7 @@ func startArgs(clientset *kubernetes.Clientset) {
 
 	if *podsPtr == true {
 		getPods(clientset, *nsPtr)
-		//os.Exit(0)
+		os.Exit(0)
 	}
 
 	if *cfmapPtr == true {
