@@ -18,7 +18,7 @@ func usage() {
 	Version := "v0.1"
 	fmt.Printf("🏔️ ✓ %s %s\n", ProjectName, Version)
 	fmt.Println("Author: Aly Khimji")
-	fmt.Print("\nUsage: akctl [-pods|-configmap|-ingress]\n")
+	fmt.Print("\nUsage: akctl  ")
 	fmt.Println("Options:")
 	fmt.Println("    --config\tConfiguration path")
 	fmt.Println("    --help\tHelp info")
@@ -32,6 +32,10 @@ func getPods(clientset *kubernetes.Clientset, namespace string) {
 	}
 	for i, pod := range pods.Items {
 		fmt.Printf("[%d] %s\n", i, pod.GetName())
+		fmt.Println("Request CPU ==> ", pod.Spec.Containers[0].Resources.Requests.Cpu(), " Request Memory ==> ", pod.Spec.Containers[0].Resources.Requests.Memory())
+		fmt.Println("Limit CPU ==> ", pod.Spec.Containers[0].Resources.Limits.Cpu(), " Limit Memory ==> ", pod.Spec.Containers[0].Resources.Limits.Memory())
+		fmt.Println("")
+		fmt.Println("")
 	}
 }
 
@@ -63,43 +67,39 @@ func getIngress(clientset *kubernetes.Clientset) {
 	fmt.Println("")
 	ingress, err := clientset.ExtensionsV1beta1().Ingresses("").List(metav1.ListOptions{}) // "" is all namespaces
 	for i, v := range ingress.Items {
-		//fmt.Printf("%#v\n", v)
-		//if v.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntVal == 8080
-		//if v.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntVal == 8080 {
 		fmt.Println("Ingress:", i)
-		//fmt.Println(v.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntVal)
-		//fmt.Println(v.Spec)
-		//fmt.Println(v.Spec.Rules[0])
-		//fmt.Println(v.Spec.Rules[0].HTTP)
 		fmt.Println("Ingress ServiceName:", v.Spec.Rules[0].HTTP.Paths[0].Backend.ServiceName)
-		//fmt.Println(v.Spec.Rules[0].HTTP.Paths[0].Backend.ServiceName)
 		fmt.Println("Ingress ServicePort:", v.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntValue())
-		//fmt.Println(v.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntValue())
 		fmt.Println("Ingress Host:", v.Spec.Rules[0].Host)
-		//fmt.Println(v.Spec.Rules[0].Host)
 		fmt.Println("")
 		//}
 	}
 }
 
-// func showIngress(clientset *kubernetes.Clientset) {
-// 	list, _ := clientset.ExtensionsV1beta1().Ingresses("").List(metav1.ListOptions{}) // "" is all namespaces
-// 	for _, ingress := range list.Items {
-// 		for _, rule := range ingress.Spec.Rules {
-// 			for _, path := range rule.HTTP.Paths {
-// 				service, _ := clientset.CoreV1().Services(ingress.GetObjectMeta().GetNamespace()).Get(path.Backend.ServiceName, metav1.GetOptions{})
-// 				host := rule.Host
-// 				fmt.Println(host)
-// 				path := path.Path
-// 				fmt.Println(path)
-// 				backend := ingress.spec
-// 				fmt.Println(backend)
-// 				destination := service.Spec.ClusterIP
-// 				fmt.Println(destination)
-// 			}
-// 		}
-// 	}
-// }
+func showIngress(clientset *kubernetes.Clientset, namespace string) {
+	list, _ := clientset.ExtensionsV1beta1().Ingresses(namespace).List(metav1.ListOptions{}) // "" is all namespaces
+	for i, ingress := range list.Items {
+		for _, rule := range ingress.Spec.Rules {
+			for _, path := range rule.HTTP.Paths {
+				service, _ := clientset.CoreV1().Services(ingress.GetObjectMeta().GetNamespace()).Get(path.Backend.ServiceName, metav1.GetOptions{})
+				host := rule.Host
+				fmt.Println("Ingress Index:", i)
+				fmt.Println("Namespace:", service.GetNamespace())
+				fmt.Println("Ingress Host:", host)
+				path := path.Path
+				fmt.Println("Ingress Path:", path)
+				//backend := ingress.Spec.Backend
+				//fmt.Println("Backend:", ingress.Spec.Rules[0].HTTP.Paths[0].Backend)
+				destination := service.Spec.ClusterIP
+				fmt.Println("Service ClusterIP:", destination)
+				fmt.Println("Ingress ServiceName:", ingress.Spec.Rules[0].HTTP.Paths[0].Backend.ServiceName)
+				fmt.Println("Ingress ServicePort:", ingress.Spec.Rules[0].HTTP.Paths[0].Backend.ServicePort.IntValue())
+				//fmt.Println("Ingress Host:", ingress.Spec.Rules[0].Host)
+				fmt.Println("")
+			}
+		}
+	}
+}
 
 func getServices(clientset *kubernetes.Clientset, namespace string) {
 	fmt.Println("")
@@ -238,7 +238,9 @@ func startArgs(clientset *kubernetes.Clientset) {
 		os.Exit(0)
 	}
 	if *ingressPtr == true {
-		getIngress(clientset)
+		showIngress(clientset, *nsPtr)
+		fmt.Println("")
+		//getIngress(clientset)
 		os.Exit(0)
 	}
 	if *servicesPtr == true {
@@ -263,15 +265,19 @@ func startArgs(clientset *kubernetes.Clientset) {
 
 func main() {
 
-	var ns string
-	flag.StringVar(&ns, "namespace", "", "namespace")
+	var kc string
+	flag.StringVar(&kc, "kubeconfig", "", "kubeconfig")
+	//flag.Parse()
+
 	kubeconfig := os.Getenv("kubeconfig")
 	if kubeconfig == "" {
 		fmt.Println("no env var found, falling back to config file")
 		kubeconfig = filepath.Join(os.Getenv("HOME"), ".kube", "config")
 		log.Println(" ✓ Using kubeconfig file: ", kubeconfig)
+		fmt.Println("")
 	} else {
 		log.Println(" ✓ Using kubeconfig via OS ENV")
+		fmt.Println("")
 	}
 	// Bootstrap k8s configuration
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
