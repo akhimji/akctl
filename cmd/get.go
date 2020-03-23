@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -59,6 +60,13 @@ var getCmd = &cobra.Command{
 		// Create an rest client not targeting specific API version
 		clientset, err := kubernetes.NewForConfig(config)
 
+		data, err := ioutil.ReadFile("/tmp/deployment.yaml")
+		if err != nil {
+			fmt.Println("File reading error", err)
+			return
+		}
+		podAsYaml := string(data)
+
 		getns, _ := cmd.Flags().GetBool("getns")
 		if getns == true {
 			getNamespaces(clientset)
@@ -94,6 +102,10 @@ var getCmd = &cobra.Command{
 		if deployment == true {
 			getDeployment(clientset, ns)
 		}
+		deploy, _ := cmd.Flags().GetBool("deploy")
+		if deploy == true {
+			createDeploymentFromYaml(clientset, podAsYaml, ns)
+		}
 		test, _ := cmd.Flags().GetBool("test")
 		if test == true {
 			getTest(clientset)
@@ -122,4 +134,5 @@ func init() {
 	getCmd.Flags().BoolP("getns", "a", false, "get all namespaces")
 	getCmd.Flags().BoolP("deployment", "d", false, "get deployment")
 	getCmd.Flags().BoolP("test", "t", false, "test block")
+	getCmd.Flags().BoolP("deploy", "x", false, "test deploy")
 }

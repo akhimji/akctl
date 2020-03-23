@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -273,3 +274,22 @@ func getTest(clientset *kubernetes.Clientset) {
 
 }
 func int32Ptr(i int32) *int32 { return &i }
+
+func createDeploymentFromYaml(clientset *kubernetes.Clientset, podAsYaml string, ns string) error {
+	fmt.Println("Attempting Deployment..")
+	var deployment appsv1.Deployment
+	//fmt.Println(podAsYaml)
+	err := json.Unmarshal([]byte(podAsYaml), &deployment)
+	if err != nil {
+		fmt.Println("error?:", err)
+	}
+
+	deploymentsClient := clientset.AppsV1().Deployments(apiv1.NamespaceDefault)
+	result, err := deploymentsClient.Create(&deployment)
+	//pod, poderr := clientset.CoreV1().Pods(ns).Create(&deployment)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Created deployment %q.\n", result.GetObjectMeta().GetName())
+	return nil
+}
