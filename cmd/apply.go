@@ -27,20 +27,13 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-// getCmd represents the get command
-var getCmd = &cobra.Command{
-	Use:   "get",
-	Short: "get subfuction to pull data from the kubernets cluster",
-	//Long: `	-pods
-	//		-n namespace
-	//		-s service
-	//		-cm configmaps
-	//		-ingress
-	//		-services
-	//		-podsinservice
-	//		-test`,
-
+// applyCmd represents the apply command
+var applyCmd = &cobra.Command{
+	Use:   "apply",
+	Short: "Create and Apply Manifest",
+	Long:  `Create and Apply Manifest similarly to "kubectl apply -f": `,
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("apply called")
 		kubeconfig := os.Getenv("kubeconfig")
 		if kubeconfig == "" {
 			fmt.Println("no env var found, falling back to config file")
@@ -65,73 +58,27 @@ var getCmd = &cobra.Command{
 			fmt.Println("File reading error", err)
 			return
 		}
-		podAsYaml := string(data)
-
-		getns, _ := cmd.Flags().GetBool("getns")
-		if getns == true {
-			getNamespaces(clientset)
-		}
 
 		ns, _ := cmd.Flags().GetString("namespace")
-		svc, _ := cmd.Flags().GetString("service")
-		if ns == "" {
-			fmt.Println("namespace has not been declared use: '-n <nanespace>")
-			os.Exit(1)
-		}
-		pods, _ := cmd.Flags().GetBool("pods")
-		if pods == true {
-			getPods(clientset, ns)
-		}
-		configmap, _ := cmd.Flags().GetBool("configmap")
-		if configmap == true {
-			getConfigMaps(clientset, ns)
-		}
-		ingress, _ := cmd.Flags().GetBool("ingress")
-		if ingress == true {
-			showIngress(clientset, ns)
-		}
-		services, _ := cmd.Flags().GetBool("services")
-		if services == true {
-			getServices(clientset, ns)
-		}
-		podsinsvc, _ := cmd.Flags().GetBool("podsinsvc")
-		if podsinsvc == true {
-			getPodinService(clientset, svc)
-		}
-		deployment, _ := cmd.Flags().GetBool("deployment")
-		if deployment == true {
-			getDeployment(clientset, ns)
-		}
 		deploy, _ := cmd.Flags().GetBool("deploy")
 		if deploy == true {
 			createDeploymentFromYaml(clientset, podAsYaml, ns)
 		}
-		test, _ := cmd.Flags().GetBool("test")
-		if test == true {
-			getTest(clientset)
-		}
-
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(getCmd)
+	rootCmd.AddCommand(applyCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	//getCmd.PersistentFlags().String("n", "", "namespace")
-	getCmd.Flags().StringP("namespace", "n", "", "namespace")
-	getCmd.Flags().StringP("service", "s", "", "service")
+	// applyCmd.PersistentFlags().String("foo", "", "A help for foo")
+
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	getCmd.Flags().BoolP("pods", "p", false, "get pods")
-	getCmd.Flags().BoolP("configmap", "c", false, "get configmap")
-	getCmd.Flags().BoolP("ingress", "i", false, "get ingress")
-	getCmd.Flags().BoolP("services", "", false, "get services")
-	getCmd.Flags().BoolP("podsinsvc", "", false, "get pods behind a service")
-	getCmd.Flags().BoolP("getns", "a", false, "get all namespaces")
-	getCmd.Flags().BoolP("deployment", "d", false, "get deployment")
-	getCmd.Flags().BoolP("test", "t", false, "test block")
+	// applyCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	applyCmd.Flags().StringP("namespace", "n", "", "namespace")
+	applyCmd.Flags().BoolP("deploy", "d", false, "test deploy")
 }

@@ -275,11 +275,11 @@ func getTest(clientset *kubernetes.Clientset) {
 }
 func int32Ptr(i int32) *int32 { return &i }
 
-func createDeploymentFromYaml(clientset *kubernetes.Clientset, podAsYaml string, ns string) error {
+func createDeploymentFromYaml(clientset *kubernetes.Clientset, podAsYaml []byte, ns string) error {
 	fmt.Println("Attempting Deployment..")
 	var deployment appsv1.Deployment
 	//fmt.Println(podAsYaml)
-	err := json.Unmarshal([]byte(podAsYaml), &deployment)
+	err := json.Unmarshal(podAsYaml, &deployment)
 	if err != nil {
 		fmt.Println("error?:", err)
 	}
