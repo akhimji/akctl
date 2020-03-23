@@ -1,16 +1,13 @@
 package cmd
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 func usage() {
@@ -208,92 +205,5 @@ func getPodinService(clientset *kubernetes.Clientset, name string) {
 			}
 		}
 	}
-
-}
-
-func startArgs(clientset *kubernetes.Clientset) {
-	if len(os.Args) < 2 {
-		usage()
-		os.Exit(0)
-	}
-	podsPtr := flag.Bool("pods", false, "pods")
-	nsPtr := flag.String("n", "", "namespace")
-	svcPtr := flag.String("s", "", "service")
-	cfmapPtr := flag.Bool("configmaps", false, "Config Maps")
-	ingressPtr := flag.Bool("ingress", false, "Ingresses and Details")
-	servicesPtr := flag.Bool("services", false, "Services and Details")
-	namespacesPtr := flag.Bool("namespaces", false, "namespaces")
-	podsinservicePtr := flag.Bool("podsinservice", false, "podsinservice")
-	testPtr := flag.Bool("test", false, "test")
-
-	flag.Parse()
-
-	if *podsPtr == true {
-		getPods(clientset, *nsPtr)
-		os.Exit(0)
-	}
-	if *cfmapPtr == true {
-		getConfigMaps(clientset, *nsPtr)
-		os.Exit(0)
-	}
-	if *ingressPtr == true {
-		showIngress(clientset, *nsPtr)
-		fmt.Println("")
-		//getIngress(clientset)
-		os.Exit(0)
-	}
-	if *servicesPtr == true {
-		getServices(clientset, *nsPtr)
-		os.Exit(0)
-	}
-	if *namespacesPtr == true {
-		getNamespaces(clientset)
-		os.Exit(0)
-	}
-	if *testPtr == true {
-		getTest(clientset)
-		os.Exit(0)
-	}
-	if *podsinservicePtr == true {
-		getPodinService(clientset, *svcPtr)
-		os.Exit(0)
-	}
-	fmt.Println("Try Again..")
-	os.Exit(0)
-}
-
-func main() {
-
-	var kc string
-	flag.StringVar(&kc, "kubeconfig", "", "kubeconfig")
-	//flag.Parse()
-
-	kubeconfig := os.Getenv("kubeconfig")
-	if kubeconfig == "" {
-		fmt.Println("no env var found, falling back to config file")
-		kubeconfig = filepath.Join(os.Getenv("HOME"), ".kube", "config")
-		log.Println(" ✓ Using kubeconfig file: ", kubeconfig)
-		fmt.Println("")
-	} else {
-		log.Println(" ✓ Using kubeconfig via OS ENV")
-		fmt.Println("")
-	}
-	// Bootstrap k8s configuration
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create an rest client not targeting specific API version
-	clientset, err := kubernetes.NewForConfig(config)
-	//fmt.Println(reflect.TypeOf(clientset))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	startArgs(clientset)
-
-	//name := "istio-operator-metrics"
-	//getPodinService(clientset, name)
 
 }

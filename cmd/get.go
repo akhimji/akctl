@@ -29,9 +29,15 @@ import (
 // getCmd represents the get command
 var getCmd = &cobra.Command{
 	Use:   "get",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-			and usage of using your command. For example:`,
+	Short: "get subfuction to pull data from the kubernets cluster",
+	//Long: `	-pods
+	//		-n namespace
+	//		-s service
+	//		-cm configmaps
+	//		-ingress
+	//		-services
+	//		-podsinservice
+	//		-test`,
 
 	Run: func(cmd *cobra.Command, args []string) {
 		kubeconfig := os.Getenv("kubeconfig")
@@ -53,19 +59,37 @@ var getCmd = &cobra.Command{
 		// Create an rest client not targeting specific API version
 		clientset, err := kubernetes.NewForConfig(config)
 
-		pods, _ := cmd.Flags().GetBool("pods")
-		if pods == true {
-			ns, _ := cmd.Flags().GetString("namespace")
-			if ns == "" {
-				fmt.Println("namespace has not been diclared")
-				os.Exit(1)
-			} else {
-				getPods(clientset, ns)
-			}
-
+		getns, _ := cmd.Flags().GetBool("getns")
+		if getns == true {
+			getNamespaces(clientset)
 		}
 
-		fmt.Println("get called")
+		ns, _ := cmd.Flags().GetString("namespace")
+		svc, _ := cmd.Flags().GetString("service")
+		if ns == "" {
+			fmt.Println("namespace has not been declared use: '-n <nanespace>")
+			os.Exit(1)
+		}
+		pods, _ := cmd.Flags().GetBool("pods")
+		if pods == true {
+			getPods(clientset, ns)
+		}
+		configmap, _ := cmd.Flags().GetBool("configmap")
+		if configmap == true {
+			getConfigMaps(clientset, ns)
+		}
+		ingress, _ := cmd.Flags().GetBool("ingress")
+		if ingress == true {
+			showIngress(clientset, ns)
+		}
+		services, _ := cmd.Flags().GetBool("services")
+		if services == true {
+			getServices(clientset, ns)
+		}
+		podsinsvc, _ := cmd.Flags().GetBool("podsinsvc")
+		if podsinsvc == true {
+			getPodinService(clientset, svc)
+		}
 
 	},
 }
@@ -79,7 +103,14 @@ func init() {
 	// and all subcommands, e.g.:
 	//getCmd.PersistentFlags().String("n", "", "namespace")
 	getCmd.Flags().StringP("namespace", "n", "", "namespace")
+	getCmd.Flags().StringP("service", "s", "", "service")
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	getCmd.Flags().BoolP("pods", "p", false, "")
+	getCmd.Flags().BoolP("pods", "p", false, "get pods")
+	getCmd.Flags().BoolP("configmap", "c", false, "get configmap")
+	getCmd.Flags().BoolP("ingress", "i", false, "get ingress")
+	getCmd.Flags().BoolP("services", "", false, "get services")
+	getCmd.Flags().BoolP("podsinsvc", "", false, "get pods behind a service")
+	getCmd.Flags().BoolP("getns", "a", false, "get all namespaces")
+
 }
