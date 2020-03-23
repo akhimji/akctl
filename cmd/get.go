@@ -43,7 +43,7 @@ var getCmd = &cobra.Command{
 		kubeconfig := os.Getenv("kubeconfig")
 		if kubeconfig == "" {
 			fmt.Println("no env var found, falling back to config file")
-			kubeconfig = filepath.Join(os.Getenv("HOME"), ".kube", "config")
+			kubeconfig = filepath.Join(os.Getenv("HOME"), ".kube", "kubeconfig")
 			log.Println(" ✓ Using kubeconfig file: ", kubeconfig)
 			fmt.Println("")
 		} else {
@@ -90,6 +90,14 @@ var getCmd = &cobra.Command{
 		if podsinsvc == true {
 			getPodinService(clientset, svc)
 		}
+		deployment, _ := cmd.Flags().GetBool("deployment")
+		if deployment == true {
+			getDeployment(clientset, ns)
+		}
+		test, _ := cmd.Flags().GetBool("test")
+		if test == true {
+			getTest(clientset)
+		}
 
 	},
 }
@@ -112,5 +120,6 @@ func init() {
 	getCmd.Flags().BoolP("services", "", false, "get services")
 	getCmd.Flags().BoolP("podsinsvc", "", false, "get pods behind a service")
 	getCmd.Flags().BoolP("getns", "a", false, "get all namespaces")
-
+	getCmd.Flags().BoolP("deployment", "d", false, "get deployment")
+	getCmd.Flags().BoolP("test", "t", false, "test block")
 }
