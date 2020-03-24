@@ -62,7 +62,7 @@ var applyCmd = &cobra.Command{
 		ns, _ := cmd.Flags().GetString("namespace")
 		deploy, _ := cmd.Flags().GetBool("deploy")
 		if deploy == true {
-			createDeploymentFromYaml(clientset, podAsYaml, ns)
+			createDeploymentFromYaml(clientset, data, ns)
 		}
 	},
 }

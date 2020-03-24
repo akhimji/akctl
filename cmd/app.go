@@ -1,11 +1,12 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 
+	"github.com/ghodss/yaml"
+	//"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -279,16 +280,18 @@ func createDeploymentFromYaml(clientset *kubernetes.Clientset, podAsYaml []byte,
 	fmt.Println("Attempting Deployment..")
 	var deployment appsv1.Deployment
 	//fmt.Println(podAsYaml)
-	err := json.Unmarshal(podAsYaml, &deployment)
+	err := yaml.Unmarshal(podAsYaml, &deployment)
 	if err != nil {
-		fmt.Println("error?:", err)
+		fmt.Println("Error Unmarshaling:", err)
 	}
 
 	deploymentsClient := clientset.AppsV1().Deployments(apiv1.NamespaceDefault)
 	result, err := deploymentsClient.Create(&deployment)
 	//pod, poderr := clientset.CoreV1().Pods(ns).Create(&deployment)
 	if err != nil {
-		return err
+		fmt.Println("Error Creating Deployment:")
+		fmt.Println(err)
+		os.Exit(1)
 	}
 	fmt.Printf("Created deployment %q.\n", result.GetObjectMeta().GetName())
 	return nil
