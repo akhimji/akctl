@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"text/tabwriter"
 
 	"github.com/ghodss/yaml"
 	//"gopkg.in/yaml.v2"
@@ -26,17 +27,28 @@ func usage() {
 }
 
 func getPods(clientset *kubernetes.Clientset, namespace string) {
-	fmt.Println("")
+	w := new(tabwriter.Writer)
+	// minwidth, tabwidth, padding, padchar, flags
+	w.Init(os.Stdout, 8, 8, 0, '\t', 0)
 	pods, err := clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{})
 	if err != nil {
 		log.Fatalln("failed to get pods:", err)
 	}
-	for i, pod := range pods.Items {
-		fmt.Printf("[%d] %s\n", i, pod.GetName())
-		fmt.Println("Request CPU ==> ", pod.Spec.Containers[0].Resources.Requests.Cpu(), " Request Memory ==> ", pod.Spec.Containers[0].Resources.Requests.Memory())
-		fmt.Println("Limit CPU ==> ", pod.Spec.Containers[0].Resources.Limits.Cpu(), " Limit Memory ==> ", pod.Spec.Containers[0].Resources.Limits.Memory())
-		fmt.Println("")
-		fmt.Println("")
+	fmt.Fprintf(w, "\n %s\t%s\t\t%s\t", "Name", "Ready", "Status")
+	fmt.Fprintf(w, "\n %s\t%s\t\t%s\t", "----", "----", "----")
+	//fmt.Fprintln(w, "Name\tReady\tStatus\tRestarts\tAge\t")
+	fmt.Fprintln(w)
+	defer w.Flush()
+	for _, pod := range pods.Items {
+		fmt.Fprintf(w, "%s\t%s\t\t%s\t\n", pod.GetName(), pod.Status.Phase, "1/1")
+		//fmt.Fprintln(w, pod.GetName(), "\t", pod.Status.Phase, "\tStatus\tRestarts\tAge")
+		//fmt.Fprintln(w, pod.GetName(), pod.Status.Phase)
+		//fmt.Println(pod.GetName(), "", pod.Status.Phase)
+		//fmt.Printf("[%d] %s\n", i, pod.GetName(), "		", pod.Status.Phase)
+		//fmt.Println("Request CPU ==> ", pod.Spec.Containers[0].Resources.Requests.Cpu(), " Request Memory ==> ", pod.Spec.Containers[0].Resources.Requests.Memory())
+		//fmt.Println("Limit CPU ==> ", pod.Spec.Containers[0].Resources.Limits.Cpu(), " Limit Memory ==> ", pod.Spec.Containers[0].Resources.Limits.Memory())
+		//	fmt.Println("")
+		//	fmt.Println("")
 	}
 }
 
@@ -315,4 +327,16 @@ func deleteDeployment(clientset *kubernetes.Clientset, deployment string, ns str
 	}
 	fmt.Println("Deleted deployment.")
 
+}
+
+func deletePod(clientset *kubernetes.Clientset, podname string, ns string) {
+	deletePolicy := metav1.DeletePropagationForeground
+	deleteOptions := metav1.DeleteOptions{PropagationPolicy: &deletePolicy}
+	if err := clientset.CoreV1().Pods(ns).Delete(podname, &deleteOptions); err != nil {
+		fmt.Println("Error Failed to Delete Pod:")
+		fmt.Println(err)
+		os.Exit(1)
+	} else {
+		fmt.Println("Deleting Pod:", podname)
+	}
 }

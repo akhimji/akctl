@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -27,13 +26,18 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-// applyCmd represents the apply command
-var applyCmd = &cobra.Command{
-	Use:   "apply",
-	Short: "Create and Apply Manifest",
-	Long:  `Create and Apply Manifest similarly to "kubectl apply -f": `,
+// deleteCmd represents the delete command
+var deleteCmd = &cobra.Command{
+	Use:   "delete",
+	Short: "A brief description of your command",
+	Long: `A longer description that spans multiple lines and likely contains examples
+and usage of using your command. For example:
+
+Cobra is a CLI library for Go that empowers applications.
+This application is a tool to generate the needed files
+to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("apply called")
+		fmt.Println("delete called")
 		kubeconfig := os.Getenv("kubeconfig")
 		if kubeconfig == "" {
 			fmt.Println("no env var found, falling back to config file")
@@ -49,39 +53,39 @@ var applyCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		// Create an rest client not targeting specific API version
 		clientset, err := kubernetes.NewForConfig(config)
-		ns, _ := cmd.Flags().GetString("namespace")
 
-		file, _ := cmd.Flags().GetString("file")
-		data, err := ioutil.ReadFile(file)
-		if err != nil {
-			fmt.Println("File reading error", err)
+		ns, _ := cmd.Flags().GetString("namespace")
+		if ns == "" {
+			fmt.Println("namespace has not been declared use: '-n <nanespace>")
 			os.Exit(1)
 		}
-
-		deployoyment, _ := cmd.Flags().GetBool("deployoyment")
-		if deployoyment == true {
-			createDeploymentFromYaml(clientset, data, ns)
+		deployment, _ := cmd.Flags().GetString("deployment")
+		if deployment != "" {
+			deleteDeployment(clientset, deployment, ns)
+			os.Exit(0)
 		}
-
+		pod, _ := cmd.Flags().GetString("pod")
+		if pod != "" {
+			deletePod(clientset, pod, ns)
+			os.Exit(0)
+		}
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(applyCmd)
+	rootCmd.AddCommand(deleteCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// applyCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// deleteCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// applyCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	applyCmd.Flags().StringP("namespace", "n", "", "namespace")
-	applyCmd.Flags().BoolP("deployoyment", "d", false, "test deploy")
-	applyCmd.Flags().StringP("file", "f", "", "file path")
+	// deleteCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	deleteCmd.Flags().StringP("namespace", "n", "", "namespace")
+	deleteCmd.Flags().StringP("deployment", "d", "", "delete deployment  <name of deployment>")
+	deleteCmd.Flags().StringP("pod", "p", "", "delete pod <name of deployment>")
 }
