@@ -277,15 +277,17 @@ func getTest(clientset *kubernetes.Clientset) {
 func int32Ptr(i int32) *int32 { return &i }
 
 func createDeploymentFromYaml(clientset *kubernetes.Clientset, podAsYaml []byte, ns string) error {
+	//podAsYaml []byte
+	//This is received in byte format after reading it from disk.
 	fmt.Println("Attempting Deployment..")
 	var deployment appsv1.Deployment
-	//fmt.Println(podAsYaml)
 	err := yaml.Unmarshal(podAsYaml, &deployment)
 	if err != nil {
 		fmt.Println("Error Unmarshaling:", err)
 	}
 
 	deploymentsClient := clientset.AppsV1().Deployments(apiv1.NamespaceDefault)
+	// pointer to deployment object
 	result, err := deploymentsClient.Create(&deployment)
 	//pod, poderr := clientset.CoreV1().Pods(ns).Create(&deployment)
 	if err != nil {
@@ -298,8 +300,12 @@ func createDeploymentFromYaml(clientset *kubernetes.Clientset, podAsYaml []byte,
 }
 
 func deleteDeployment(clientset *kubernetes.Clientset, deployment string, ns string) {
+	// build client set
 	deploymentsClient := clientset.AppsV1().Deployments(ns)
+	// build delete policy
 	deletePolicy := metav1.DeletePropagationForeground
+	// From Docs "PropagationPolicy    *DeletionPropagation"  in json format and *DeletionPropagation is pointer to metav1.DeletePropagationForeground
+	//(&deletePolicy is pointer to deletePolicy)
 	deleteOptions := metav1.DeleteOptions{PropagationPolicy: &deletePolicy}
 	err := deploymentsClient.Delete(deployment, &deleteOptions)
 	if err != nil {
