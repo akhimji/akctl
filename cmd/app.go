@@ -296,3 +296,17 @@ func createDeploymentFromYaml(clientset *kubernetes.Clientset, podAsYaml []byte,
 	fmt.Printf("Created deployment %q.\n", result.GetObjectMeta().GetName())
 	return nil
 }
+
+func deleteDeployment(clientset *kubernetes.Clientset, deployment string, ns string) {
+	deploymentsClient := clientset.AppsV1().Deployments(ns)
+	deletePolicy := metav1.DeletePropagationForeground
+	deleteOptions := metav1.DeleteOptions{PropagationPolicy: &deletePolicy}
+	err := deploymentsClient.Delete(deployment, &deleteOptions)
+	if err != nil {
+		fmt.Println("Error Deleting Deployment:")
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println("Deleted deployment.")
+
+}

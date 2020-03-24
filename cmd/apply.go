@@ -52,18 +52,26 @@ var applyCmd = &cobra.Command{
 
 		// Create an rest client not targeting specific API version
 		clientset, err := kubernetes.NewForConfig(config)
+		ns, _ := cmd.Flags().GetString("namespace")
 
-		data, err := ioutil.ReadFile("/tmp/deployment.yaml")
-		if err != nil {
-			fmt.Println("File reading error", err)
-			return
+		delete, _ := cmd.Flags().GetString("delete")
+		if delete != "" {
+			deleteDeployment(clientset, delete, ns)
+			os.Exit(0)
 		}
 
-		ns, _ := cmd.Flags().GetString("namespace")
+		file, _ := cmd.Flags().GetString("file")
+		data, err := ioutil.ReadFile(file)
+		if err != nil {
+			fmt.Println("File reading error", err)
+			os.Exit(1)
+		}
+
 		deploy, _ := cmd.Flags().GetBool("deploy")
 		if deploy == true {
 			createDeploymentFromYaml(clientset, data, ns)
 		}
+
 	},
 }
 
@@ -80,5 +88,7 @@ func init() {
 	// is called directly, e.g.:
 	// applyCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	applyCmd.Flags().StringP("namespace", "n", "", "namespace")
-	applyCmd.Flags().BoolP("deploy", "d", false, "test deploy")
+	applyCmd.Flags().BoolP("deploy", "", false, "test deploy")
+	applyCmd.Flags().StringP("delete", "d", "", "test deploy")
+	applyCmd.Flags().StringP("file", "f", "", "file path")
 }
