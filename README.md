@@ -1,6 +1,6 @@
 # akctl
 
-##### This is a project to rebuild core functionality of the kubectl project from scratch to further understand the kubernetes framwork and related Go Kubernetes Spec.
+### This is a project to rebuild core functionality of the kubectl project from scratch to further understand the kubernetes framwork and related Go Kubernetes Spec.
 ```
 Usage:
   akctl [flags]
@@ -54,7 +54,7 @@ Get Ingress
 Get Service in Namespace
 ![Get Svc](/screencap/getsvc.png)
 
-Get Service in Namespace
+Get Backing Pods for Service
 ![Get Pods in Svc](/screencap/getpodsinsvc.png)
 
 apply subfunction
