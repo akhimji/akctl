@@ -1,3 +1,6 @@
+
+![Go](https://github.com/alyarctiq/akctl/workflows/Go/badge.svg)
+
 # akctl
 
 ### This is a project to rebuild core functionality of the kubectl project from scratch to further understand the kubernetes framwork and related Go Kubernetes Spec.
