@@ -12,8 +12,7 @@ import (
 
 func getServices(clientset *kubernetes.Clientset, namespace string) {
 	fmt.Println("")
-	log.Println("All Services")
-	fmt.Println("")
+	fmt.Println("All Services in Namespace:")
 	services, err := clientset.CoreV1().Services(namespace).List(metav1.ListOptions{})
 	if err != nil {
 		log.Fatalln("failed to get Services:", err)
@@ -21,12 +20,10 @@ func getServices(clientset *kubernetes.Clientset, namespace string) {
 	for i, services := range services.Items {
 		fmt.Printf("[%d] %s\n", i, services.GetName())
 	}
-
 	fmt.Println("")
-	log.Println("Breakout Services")
+	fmt.Println("--> Services Details:")
 	fmt.Println("")
 	for _, v := range services.Items {
-		fmt.Println("")
 		//fmt.Println(v)
 		fmt.Println("ServiceName:", v.GetName())
 		fmt.Println("Namespace:", v.GetNamespace())

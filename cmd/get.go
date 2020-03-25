@@ -45,10 +45,8 @@ var getCmd = &cobra.Command{
 			fmt.Println("no env var found, falling back to config file")
 			kubeconfig = filepath.Join(os.Getenv("HOME"), ".kube", "kubeconfig")
 			log.Println(" ✓ Using kubeconfig file: ", kubeconfig)
-			fmt.Println("")
 		} else {
 			log.Println(" ✓ Using kubeconfig via OS ENV")
-			fmt.Println("")
 		}
 		// Bootstrap k8s configuration
 		config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)

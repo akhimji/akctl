@@ -93,3 +93,15 @@ func getPodinService(clientset *kubernetes.Clientset, name string) {
 	}
 
 }
+
+func deletePod(clientset *kubernetes.Clientset, podname string, ns string) {
+	deletePolicy := metav1.DeletePropagationForeground
+	deleteOptions := metav1.DeleteOptions{PropagationPolicy: &deletePolicy}
+	if err := clientset.CoreV1().Pods(ns).Delete(podname, &deleteOptions); err != nil {
+		fmt.Println("Error Failed to Delete Pod:")
+		fmt.Println(err)
+		os.Exit(1)
+	} else {
+		fmt.Println("Deleting Pod:", podname)
+	}
+}

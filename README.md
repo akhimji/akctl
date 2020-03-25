@@ -1,10 +1,7 @@
 # akctl
 
-akctl
+##### This is a project to rebuild core functionality of the kubectl project from scratch to further understand the kubernetes framwork and related Go Kubernetes Spec.
 ```
-This is a pet proeject to rebuild the kubectl project from scratch to further understand 
-                        the kubernetes API and related Go framwork.
-
 Usage:
   akctl [flags]
   akctl [command]
@@ -45,6 +42,20 @@ Flags:
 Global Flags:
       --kubeconfig string   config file (default is $HOME/.kube/kubeconfig)
 ```
+Get Pods
+![Get Pods](/screencap/getpods.png)
+
+Get ConfigMap
+![Get  ConfigMap](/screencap/getmc.png)
+
+Get Ingress
+![Get Ingress](/screencap/getingress.png)
+
+Get Service in Namespace
+![Get Svc](/screencap/getsvc.png)
+
+Get Service in Namespace
+![Get Pods in Svc](/screencap/getpodsinsvc.png)
 
 apply subfunction
 ```
@@ -63,3 +74,24 @@ Flags:
 Global Flags:
       --kubeconfig string   config file (default is $HOME/.kube/kubeconfig)
 ```
+Apply Deployment Config Yaml
+![deply](/screencap/deploy.png)
+
+delete subfunction
+```
+delete subfuction similar to "kubectl delete ":
+
+Usage:
+  akctl delete [flags]
+
+Flags:
+  -d, --deployment string   delete deployment  <name of deployment>
+  -h, --help                help for delete
+  -n, --namespace string    namespace
+  -p, --pod string          delete pod <name of deployment>
+
+Global Flags:
+      --kubeconfig string   config file (default is $HOME/.kube/kubeconfig)
+```
+Delete Deployment Config 
+![deply](/screencap/delete.png)
