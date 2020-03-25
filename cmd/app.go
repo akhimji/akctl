@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"text/tabwriter"
+	"time"
 
 	"github.com/ghodss/yaml"
 	//"gopkg.in/yaml.v2"
@@ -27,23 +28,37 @@ func usage() {
 }
 
 func getPods(clientset *kubernetes.Clientset, namespace string) {
+	var readyStatus string
 	w := new(tabwriter.Writer)
 	// minwidth, tabwidth, padding, padchar, flags
 	w.Init(os.Stdout, 8, 8, 0, '\t', 0)
+
 	pods, err := clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{})
 	if err != nil {
 		log.Fatalln("failed to get pods:", err)
 	}
-	fmt.Fprintf(w, "\n %s\t%s\t\t%s\t", "Name", "Ready", "Status")
-	fmt.Fprintf(w, "\n %s\t%s\t\t%s\t", "----", "----", "----")
-	//fmt.Fprintln(w, "Name\tReady\tStatus\tRestarts\tAge\t")
+	fmt.Fprintf(w, "\n %s\t%s\t\t%s\t%s\t", "Name", "Status", "Ready", "Age")
+	fmt.Fprintf(w, "\n %s\t%s\t\t%s\t%s\t", "----", "----", "----", "----")
 	fmt.Fprintln(w)
 	defer w.Flush()
 	for _, pod := range pods.Items {
-		fmt.Fprintf(w, "%s\t%s\t\t%s\t\n", pod.GetName(), pod.Status.Phase, "1/1")
-		//fmt.Fprintln(w, pod.GetName(), "\t", pod.Status.Phase, "\tStatus\tRestarts\tAge")
-		//fmt.Fprintln(w, pod.GetName(), pod.Status.Phase)
-		//fmt.Println(pod.GetName(), "", pod.Status.Phase)
+		readyContainers := 0
+		totalContainers := len(pod.Spec.Containers)
+		podCreationTime := pod.GetCreationTimestamp()
+		age := time.Since(podCreationTime.Time).Round(time.Minute)
+
+		for i := len(pod.Status.ContainerStatuses) - 1; i >= 0; i-- {
+			container := pod.Status.ContainerStatuses[i]
+			if container.Ready && container.State.Running != nil {
+				readyContainers++
+			}
+		}
+		readyStatus = fmt.Sprint(readyContainers, "/", totalContainers)
+		fmt.Fprintf(w, "%s\t%s\t\t%s\t%s\t\n", pod.GetName(), pod.Status.Phase, readyStatus, age.String())
+
+		//fmt.Println(pod.Status.Phase)
+		//fmt.Println(apiv1.PodSucceeded)
+
 		//fmt.Printf("[%d] %s\n", i, pod.GetName(), "		", pod.Status.Phase)
 		//fmt.Println("Request CPU ==> ", pod.Spec.Containers[0].Resources.Requests.Cpu(), " Request Memory ==> ", pod.Spec.Containers[0].Resources.Requests.Memory())
 		//fmt.Println("Limit CPU ==> ", pod.Spec.Containers[0].Resources.Limits.Cpu(), " Limit Memory ==> ", pod.Spec.Containers[0].Resources.Limits.Memory())
