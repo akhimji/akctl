@@ -49,7 +49,7 @@ Get ConfigMap
 ![Get  ConfigMap](/screencap/getmc.png)
 
 Get Ingress
-![Get Ingress](/screencap/getingress.png)
+![Get Ingress](/screencap/getIngress.png)
 
 Get Service in Namespace
 ![Get Svc](/screencap/getsvc.png)
@@ -85,10 +85,10 @@ Usage:
   akctl delete [flags]
 
 Flags:
-  -d, --deployment string   delete deployment  <name of deployment>
+  -d, --deployment string   delete --deployment  <name of deployment>
   -h, --help                help for delete
   -n, --namespace string    namespace
-  -p, --pod string          delete pod <name of deployment>
+  -p, --pod string          delete --pod <name of pod>
 
 Global Flags:
       --kubeconfig string   config file (default is $HOME/.kube/kubeconfig)
