@@ -2,7 +2,7 @@ on: release
 name: build-release
 jobs:
   build:
-    name: Release-Build
+    name: build-release
     runs-on: ubuntu-latest
     steps:
     
