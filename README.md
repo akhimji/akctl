@@ -1,5 +1,6 @@
 
 ![Go](https://github.com/alyarctiq/akctl/workflows/Go/badge.svg)
+![build-release](https://github.com/alyarctiq/akctl/workflows/build-release/badge.svg)
 
 # akctl
 
