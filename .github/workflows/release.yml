@@ -29,4 +29,8 @@ jobs:
        GOOS: darwin
        GO111MODULE: on 
       run:   go build -o akctl-$GOOS-$GOARCH
-    
+
+    - name: Show Build
+      run: |
+        ls -l 
+        ls -l $GOPATH/bin
