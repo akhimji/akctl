@@ -30,7 +30,9 @@ jobs:
        GO111MODULE: on 
       run:   go build -o akctl-$GOOS-$GOARCH
 
-    - name: Show Build
-      run: |
-        ls -l 
-        ls -l $GOPATH/bin
+    - name: Action Release
+      uses: yakuhzi/action-release@v1.2.0
+      with: 
+        # File to upload to the release
+        file: ./akctl-darwin-amd64
+
