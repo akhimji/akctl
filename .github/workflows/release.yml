@@ -1,5 +1,5 @@
 on: release
-name: Release-Build
+name: build-release
 jobs:
   build:
     name: Release-Build
@@ -23,7 +23,7 @@ jobs:
             dep ensure
         fi
         
-    - name: Build
+    - name: Build Darwin64
       env:
        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
        GOARCH: amd64
@@ -32,8 +32,19 @@ jobs:
       run: |   
           go build -o akctl-$GOOS-$GOARCH
           md5sum akctl-$GOOS-$GOARCH > akctl-$GOOS-$GOARCH.md5
-          ls -l 
+          chmod +x akctl-$GOOS-$GOARCH
           
+    - name: Build Linux64
+      env:
+       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+       GOARCH: amd64
+       GOOS: linux
+       GO111MODULE: on 
+      run: |   
+          go build -o akctl-$GOOS-$GOARCH
+          md5sum akctl-$GOOS-$GOARCH > akctl-$GOOS-$GOARCH.md5
+          chmod +x akctl-$GOOS-$GOARCH
+                    
     - name: Release-darwin-amd64
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
@@ -44,3 +55,12 @@ jobs:
       env:
        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Release-linux-amd64
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          akctl-linux-amd64
+          akctl-linux-amd64.md5
+      env:
+       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
