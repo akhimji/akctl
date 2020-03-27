@@ -1,74 +1,23 @@
-on: release
-name: build-release
+on: 
+  release:
+    types: [created]
+
 jobs:
-  build:
-    name: build-release
+  releases-matrix:
+    name: Release Go Binary
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # build and publish in parallel: linux/386, linux/amd64, windows/386, windows/amd64, darwin/386, darwin/amd64 
+        goos: [linux, darwin]
+        goarch: [amd64]
     steps:
-    
-    - name: Set up Go 1.14
-      uses: actions/setup-go@v1
+    - uses: actions/checkout@v2
+    - uses: wangyoucao577/go-release-action@master
       with:
-        go-version: 1.14
-      id: go
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
-
-    - name: Get dependencies
-      run: |
-        go get -v -t -d ./...
-        if [ -f Gopkg.toml ]; then
-            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-            dep ensure
-        fi
-        
-    - name: Build Darwin64
-      env:
-       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-       GOARCH: amd64
-       GOOS: darwin
-       GO111MODULE: on 
-      run: |   
-          go build -o akctl-$GOOS-$GOARCH
-          md5sum akctl-$GOOS-$GOARCH > akctl-$GOOS-$GOARCH.md5
-          chmod +x akctl-$GOOS-$GOARCH
-          
-    - name: Build Linux64
-      env:
-       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-       GOARCH: amd64
-       GOOS: linux
-       GO111MODULE: on 
-      run: |   
-          go build -o akctl-$GOOS-$GOARCH
-          md5sum akctl-$GOOS-$GOARCH > akctl-$GOOS-$GOARCH.md5
-          chmod +x akctl-$GOOS-$GOARCH
-
-    - uses: montudor/action-zip@v0.1.0
-      with:
-        args: zip -qq -r ./akctl-linux-amd64.zip ./akctl-linux-amd64
-
-    - uses: montudor/action-zip@v0.1.0
-      with:
-        args: zip -qq -r ./akctl-darwin-amd64.zip ./akctl-darwin-amd64
-      
-    - name: Release-darwin-amd64
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        files: |
-          akctl-darwin-amd64.zip
-          akctl-darwin-amd64.md5
-      env:
-       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Release-linux-amd64
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        files: |
-          akctl-linux-amd64.zip
-          akctl-linux-amd64.md5
-      env:
-       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
+        #goversion: "https://dl.google.com/go/go1.13.1.linux-amd64.tar.gz"
+        #project_path: "./cmd/test-binary"
+        binary_name: "akctl"
