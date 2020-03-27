@@ -17,13 +17,9 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 // deleteCmd represents the delete command
@@ -32,23 +28,12 @@ var deleteCmd = &cobra.Command{
 	Short: "delete subfuction",
 	Long:  `delete subfuction similar to "kubectl delete ": `,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("delete called")
-		kubeconfig := os.Getenv("kubeconfig")
-		if kubeconfig == "" {
-			fmt.Println("no env var found, falling back to config file")
-			kubeconfig = filepath.Join(os.Getenv("HOME"), ".kube", "kubeconfig")
-			log.Println(" ✓ Using kubeconfig file: ", kubeconfig)
-			fmt.Println("")
-		} else {
-			log.Println(" ✓ Using kubeconfig via OS ENV")
-			fmt.Println("")
-		}
-		// Bootstrap k8s configuration
-		config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+
+		clientset, err := buildClient(cfgFile)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("Error", err)
+			os.Exit(1)
 		}
-		clientset, err := kubernetes.NewForConfig(config)
 
 		ns, _ := cmd.Flags().GetString("namespace")
 		if ns == "" {

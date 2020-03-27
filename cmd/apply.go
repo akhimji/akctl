@@ -18,13 +18,9 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 // applyCmd represents the apply command
@@ -33,25 +29,13 @@ var applyCmd = &cobra.Command{
 	Short: "Create and Apply Manifest",
 	Long:  `Create and Apply Manifest similarly to "kubectl apply -f": `,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("apply called")
-		kubeconfig := os.Getenv("kubeconfig")
-		if kubeconfig == "" {
-			fmt.Println("no env var found, falling back to config file")
-			kubeconfig = filepath.Join(os.Getenv("HOME"), ".kube", "kubeconfig")
-			log.Println(" ✓ Using kubeconfig file: ", kubeconfig)
-			fmt.Println("")
-		} else {
-			log.Println(" ✓ Using kubeconfig via OS ENV")
-			fmt.Println("")
-		}
-		// Bootstrap k8s configuration
-		config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+
+		clientset, err := buildClient(cfgFile)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("Error", err)
+			os.Exit(1)
 		}
 
-		// Create an rest client not targeting specific API version
-		clientset, err := kubernetes.NewForConfig(config)
 		ns, _ := cmd.Flags().GetString("namespace")
 
 		file, _ := cmd.Flags().GetString("file")

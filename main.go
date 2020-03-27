@@ -15,7 +15,9 @@ limitations under the License.
 */
 package main
 
-import "github.com/alyarctiq/akctl/cmd"
+import (
+	"github.com/alyarctiq/akctl/cmd"
+)
 
 func main() {
 	cmd.Execute()

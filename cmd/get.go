@@ -17,13 +17,9 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 // getCmd represents the get command
@@ -40,29 +36,11 @@ var getCmd = &cobra.Command{
 	//		-test`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		kubeconfig := os.Getenv("kubeconfig")
-		if kubeconfig == "" {
-			fmt.Println("no env var found, falling back to config file")
-			kubeconfig = filepath.Join(os.Getenv("HOME"), ".kube", "kubeconfig")
-			log.Println(" ✓ Using kubeconfig file: ", kubeconfig)
-		} else {
-			log.Println(" ✓ Using kubeconfig via OS ENV")
-		}
-		// Bootstrap k8s configuration
-		config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+		clientset, err := buildClient(cfgFile)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("Error", err)
+			os.Exit(1)
 		}
-
-		// Create an rest client not targeting specific API version
-		clientset, err := kubernetes.NewForConfig(config)
-
-		//data, err := ioutil.ReadFile("/tmp/deployment.yaml")
-		//if err != nil {
-		//	fmt.Println("File reading error", err)
-		//	return
-		//	}
-		//	podAsYaml := string(data)
 
 		getns, _ := cmd.Flags().GetBool("getns")
 		if getns == true {

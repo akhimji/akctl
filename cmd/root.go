@@ -31,8 +31,9 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "akctl",
 	Short: "rebuilding the kubectl from scratch",
-	Long: `This is a pet proeject to rebuild the kubectl project from scratch to further understand 
-			the kubernetes API and related Go framwork.`,
+	Long: `
+	This is a project to rebuild the kubectl client from scratch to 
+	further understand the kubernetes API and related Go framework.`,
 
 	Run: func(cmd *cobra.Command, args []string) {},
 }
@@ -43,18 +44,22 @@ func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
+	} else {
+		fmt.Println("No Flags Passed, use -h for more options")
 	}
+
 }
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "kubeconfig", "", "config file (default is $HOME/.kube/kubeconfig)")
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "kubeconfig", "", "config file (default is $HOME/.kube/config)")
+	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -68,7 +73,7 @@ func initConfig() {
 
 		// Search config in home directory with name ".kube" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".kube")
+		viper.SetConfigName(".kube/config")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
@@ -77,4 +82,5 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
+
 }
