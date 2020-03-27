@@ -25,15 +25,8 @@ import (
 // getCmd represents the get command
 var getCmd = &cobra.Command{
 	Use:   "get",
-	Short: "get subfuction to pull data from the kubernets cluster",
+	Short: "Get subfuction to pull data from the kubernets cluster",
 	//Long: `	-pods
-	//		-n namespace
-	//		-s service
-	//		-cm configmaps
-	//		-ingress
-	//		-services
-	//		-podsinservice
-	//		-test`,
 
 	Run: func(cmd *cobra.Command, args []string) {
 		clientset, err := buildClient(cfgFile)

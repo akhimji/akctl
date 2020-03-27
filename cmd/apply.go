@@ -26,7 +26,7 @@ import (
 // applyCmd represents the apply command
 var applyCmd = &cobra.Command{
 	Use:   "apply",
-	Short: "Create and Apply Manifest",
+	Short: "Apply subfuction",
 	Long:  `Create and Apply Manifest similarly to "kubectl apply -f": `,
 	Run: func(cmd *cobra.Command, args []string) {
 

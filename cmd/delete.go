@@ -25,7 +25,7 @@ import (
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
 	Use:   "delete",
-	Short: "delete subfuction",
+	Short: "Delete subfuction",
 	Long:  `delete subfuction similar to "kubectl delete ": `,
 	Run: func(cmd *cobra.Command, args []string) {
 

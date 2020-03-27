@@ -11,8 +11,9 @@ Usage:
   akctl [command]
 
 Available Commands:
-  apply       Create and Apply Manifest
-  get         get subfuction to pull data from the kubernets cluster
+  apply       Apply subfuction
+  delete      Delete subfuction
+  get         Get subfuction to pull data from the kubernets cluster
   help        Help about any command
 
 Flags:
