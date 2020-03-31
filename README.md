@@ -18,7 +18,7 @@ Available Commands:
 
 Flags:
   -h, --help                help for akctl
-      --kubeconfig string   config file (default is $HOME/.kube/kubeconfig)
+      --kubeconfig string   config file (default is $HOME/.kube/config)
   -t, --toggle              Help message for toggle
 
 Use "akctl [command] --help" for more information about a command.
@@ -45,7 +45,7 @@ Flags:
   -t, --test               test block
 
 Global Flags:
-      --kubeconfig string   config file (default is $HOME/.kube/kubeconfig)
+      --kubeconfig string   config file (default is $HOME/.kube/config)
 ```
 Get Pods
 ![Get Pods](/screencap/getpods.png)
@@ -77,7 +77,7 @@ Flags:
   -n, --namespace string   namespace
 
 Global Flags:
-      --kubeconfig string   config file (default is $HOME/.kube/kubeconfig)
+      --kubeconfig string   config file (default is $HOME/.kube/config)
 ```
 Apply Deployment Config Yaml
 ![deply](/screencap/deploy.png)
@@ -96,7 +96,7 @@ Flags:
   -p, --pod string          delete --pod <name of pod>
 
 Global Flags:
-      --kubeconfig string   config file (default is $HOME/.kube/kubeconfig)
+      --kubeconfig string   config file (default is $HOME/.kube/config)
 ```
 Delete Deployment Config 
 ![deply](/screencap/delete.png)
