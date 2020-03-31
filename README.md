@@ -4,7 +4,7 @@
 
 # akctl
 
-### This is a project to rebuild core functionality of the kubectl project from scratch to further understand the kubernetes framwork and related Go Kubernetes Spec.
+### This is a project to rebuild core functionality of the kubectl project from scratch to further understand the kubernetes framework and related Go Kubernetes Spec.
 ```
 Usage:
   akctl [flags]
@@ -24,7 +24,7 @@ Flags:
 Use "akctl [command] --help" for more information about a command.
 ```
 
-get subfunction
+### get subfunction
 ```
 get subfuction to pull data from the kubernets cluster
 
@@ -62,7 +62,7 @@ Get Service in Namespace
 Get Backing Pods for Service
 ![Get Pods in Svc](/screencap/getpodsinsvc.png)
 
-apply subfunction
+### apply subfunction
 ```
 Create and Apply Manifest similarly to "kubectl apply -f":
 
@@ -82,7 +82,7 @@ Global Flags:
 Apply Deployment Config Yaml
 ![deply](/screencap/deploy.png)
 
-delete subfunction
+### delete subfunction
 ```
 delete subfuction similar to "kubectl delete ":
 
